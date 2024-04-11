@@ -1,0 +1,48 @@
+#Here I have imported the necessary libraries to work with
+
+import pandas as pd
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import SVC
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import classification_report
+from sklearn.preprocessing import LabelEncoder
+
+# Loaded the arabic poetry datset
+df = pd.read_csv(r'C:\Users\DELL\Downloads\archive\Arabic_poetry_dataset.csv', encoding='utf-8')
+
+tfidf = TfidfVectorizer(max_features=1000)  # Limit to 1000 features for example; adjust as needed.
+
+label_encoder = LabelEncoder()
+y = label_encoder.fit_transform(df['category'])
+
+# Split the dataset into features and target
+X = tfidf.fit_transform(df['poem_text'])
+
+# Create stratified k-fold cross-validation
+skf = StratifiedKFold(n_splits=10)
+
+# classifiers
+mnb = MultinomialNB()
+svm = SVC(kernel='linear')
+
+# Created pipelines for each classifier
+pipeline_mnb = Pipeline([
+    ('tfidf', tfidf),
+    ('classifier', mnb)
+])
+
+pipeline_svm = Pipeline([
+    ('tfidf', tfidf),
+    ('classifier', svm)
+])
+
+# Evaluate classifiers using cross-validation
+mnb_scores = cross_val_score(pipeline_mnb, df['poem_text'], y, cv=skf)
+svm_scores = cross_val_score(pipeline_svm, df['poem_text'], y, cv=skf)
+
+# Print the cross-validation scores
+print('MNB Mean Score:', mnb_scores.mean())
+print('SVM Mean Score:', svm_scores.mean())
+
